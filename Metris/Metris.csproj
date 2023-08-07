@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Classes\Assets\metrisbackground.jpg" />
+    <None Remove="Classes\Assets\Tiles\Block-Empty.png" />
+    <None Remove="Classes\Assets\Tiles\Block-I.png" />
+    <None Remove="Classes\Assets\Tiles\Block-J.png" />
+    <None Remove="Classes\Assets\Tiles\Block-L.png" />
+    <None Remove="Classes\Assets\Tiles\Block-O.png" />
+    <None Remove="Classes\Assets\Tiles\Block-S.png" />
+    <None Remove="Classes\Assets\Tiles\Block-T.png" />
+    <None Remove="Classes\Assets\Tiles\Block-Z.png" />
+    <None Remove="Classes\Assets\Tiles\TileBlue.png" />
+    <None Remove="Classes\Assets\Tiles\TileCyan.png" />
+    <None Remove="Classes\Assets\Tiles\TileEmpty.png" />
+    <None Remove="Classes\Assets\Tiles\TileGreen.png" />
+    <None Remove="Classes\Assets\Tiles\TileOrange.png" />
+    <None Remove="Classes\Assets\Tiles\TilePurple.png" />
+    <None Remove="Classes\Assets\Tiles\TileRed.png" />
+    <None Remove="Classes\Assets\Tiles\TileYellow.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Classes\Assets\metrisbackground.jpg" />
+    <Resource Include="Classes\Assets\Tiles\Block-Empty.png" />
+    <Resource Include="Classes\Assets\Tiles\Block-I.png" />
+    <Resource Include="Classes\Assets\Tiles\Block-J.png" />
+    <Resource Include="Classes\Assets\Tiles\Block-L.png" />
+    <Resource Include="Classes\Assets\Tiles\Block-O.png" />
+    <Resource Include="Classes\Assets\Tiles\Block-S.png" />
+    <Resource Include="Classes\Assets\Tiles\Block-T.png" />
+    <Resource Include="Classes\Assets\Tiles\Block-Z.png" />
+    <Resource Include="Classes\Assets\Tiles\TileBlue.png" />
+    <Resource Include="Classes\Assets\Tiles\TileCyan.png" />
+    <Resource Include="Classes\Assets\Tiles\TileEmpty.png" />
+    <Resource Include="Classes\Assets\Tiles\TileGreen.png" />
+    <Resource Include="Classes\Assets\Tiles\TileOrange.png" />
+    <Resource Include="Classes\Assets\Tiles\TilePurple.png" />
+    <Resource Include="Classes\Assets\Tiles\TileRed.png" />
+    <Resource Include="Classes\Assets\Tiles\TileYellow.png" />
+  </ItemGroup>
+
+</Project>
