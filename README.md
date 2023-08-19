@@ -2,4 +2,4 @@
 A Tetris clone made in WPF with no dependencies.
 
 
-![Metris](https://i.imgur.com/JAp2rVd.png)
+[![Watch the video](https://i.stack.imgur.com/Vp2cE.png)](https://youtu.be/vt5fpE0bzSY)
