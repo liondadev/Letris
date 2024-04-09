@@ -1,52 +1,44 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
-using Metris.Classes.Blocks;
+﻿use crate::blocks::{Block, LongBlock, JBlock, LBlock, SquareBlock, SquigglyBlock, TBlock, ReverseSquigglyBlock};
+use rand::prelude::*;
 
-namespace Metris.Classes.Game
-{
-    public class BlockQueue
-    {
-        // Instantiate all the possible block types
-        private readonly Block[] blocks = new Block[]
-        {
-            new LongBlock(),
-            new JBlock(),
-            new LBlock(),
-            new SquareBlock(),
-            new SquigglyBlock(),
-            new TBlock(),
-            new ReverseSquigglyBlock()
-        };
+pub struct BlockQueue {
+    blocks: Vec<Box<dyn Block>>,
+    rng: ThreadRng,
+    next_block: Box<dyn Block>,
+}
 
-        private readonly Random random = new Random();
+impl BlockQueue {
+    pub fn new() -> Self {
+        let mut rng = thread_rng();
+        let blocks: Vec<Box<dyn Block>> = vec![
+            Box::new(LongBlock::new()),
+            Box::new(JBlock::new()),
+            Box::new(LBlock::new()),
+            Box::new(SquareBlock::new()),
+            Box::new(SquigglyBlock::new()),
+            Box::new(TBlock::new()),
+            Box::new(ReverseSquigglyBlock::new()),
+        ];
+        let next_block = blocks[rng.gen_range(0, blocks.len())].clone();
 
-        public Block nextBlock { get; private set; }
+        BlockQueue { blocks, rng, next_block }
+    }
 
-        public BlockQueue()
-        {
-            nextBlock = RandomBlock();
+    pub fn get_and_update(&mut self) -> Box<dyn Block> {
+        let block = self.next_block.clone();
+        self.next_block = self.random_block();
+
+        block
+    }
+
+    fn random_block(&mut self) -> Box<dyn Block> {
+        let mut block = self.blocks[self.rng.gen_range(0, self.blocks.len())].clone();
+        
+        // Ensure the next block is different from the current one (if needed)
+        while block.id() == self.next_block.id() {
+            block = self.blocks[self.rng.gen_range(0, self.blocks.len())].clone();
         }
 
-        private Block RandomBlock()
-        {
-            return blocks[random.Next(blocks.Length)];
-        }
-
-        public Block GetAndUpdate()
-        {
-            Block block = nextBlock;
-
-            do
-            {
-                nextBlock = RandomBlock();
-            }
-            while(block.Id == nextBlock.Id && false);
-
-            return block;
-        }
+        block
     }
 }

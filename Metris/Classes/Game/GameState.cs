@@ -1,188 +1,138 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using Metris.Classes.Blocks;
+﻿local Block = require("Blocks")
+local PlayingField = require("PlayingField")
+local BlockQueue = require("BlockQueue")
 
-namespace Metris.Classes.Game
-{
-    public class GameState
-    {
-        private Block currentBlock;
+local GameState = {}
+GameState.__index = GameState
 
-        public Block CurrentBlock
-        {
-            get => currentBlock;
-            private set
-            {
-                currentBlock = value;
-                currentBlock.Reset();
+function GameState.new()
+    local self = setmetatable({}, GameState)
 
-                for (int i = 0; i < 2; i++)
-                {
-                    currentBlock.Move(1, 0);
+    self.currentBlock = nil
+    self.playingField = PlayingField.new(22, 10)
+    self.blockQueue = BlockQueue.new()
+    self.gameOver = false
+    self.score = 0
+    self.heldBlock = nil
+    self.canHold = true
 
-                    if(!BlockFits())
-                    {
-                        currentBlock.Move(-1, 0);
-                    }
-                }
-            }
-        }
+    self:init()
 
-        public PlayingField PlayingField { get; }
-        public BlockQueue BlockQueue { get; }
-        public bool GameOver { get; private set; }
-        public int Score { get; private set; }
+    return self
+end
 
-        public Block HeldBlock { get; private set; }
-        public bool CanHold { get; private set; }
+function GameState:init()
+    self.currentBlock = self.blockQueue:getAndUpdate()
+    self.canHold = true
+end
 
-        public GameState()
-        {
-            PlayingField = new PlayingField(22, 10);
-            BlockQueue = new BlockQueue();
-            CurrentBlock = BlockQueue.GetAndUpdate();
-            CanHold = true;
-        }
+function GameState:holdBlock()
+    if not self.canHold then
+        return
+    end
 
-        private bool BlockFits()
-        {
-            foreach (Position p in CurrentBlock.TilePositions())
-            {
-                if(!PlayingField.IsEmpty(p.Row, p.Column))
-                {
-                    return false;
-                }
-            }
+    if not self.heldBlock then
+        self.heldBlock = self.currentBlock
+        self.currentBlock = self.blockQueue:getAndUpdate()
+    else
+        local tmp = self.currentBlock
+        self.currentBlock = self.heldBlock
+        self.heldBlock = tmp
+    end
+end
 
-            return true;
-        }
+function GameState:rotateBlockCW()
+    self.currentBlock:rotateCW()
 
-        public void HoldBlock()
-        {
-            if (!CanHold)
-            { return; }
+    if not self:blockFits() then
+        self.currentBlock:rotateACW()
+    end
+end
 
-            if (HeldBlock == null)
-            {
-                HeldBlock = CurrentBlock;
-                CurrentBlock = BlockQueue.GetAndUpdate();
-            }
-            else
-            {
-                Block tmp = CurrentBlock;
-                CurrentBlock = HeldBlock;
-                HeldBlock = tmp;
-            }
-        }
+function GameState:rotateBlockACW()
+    self.currentBlock:rotateACW()
 
-        public void RotateBlockCW()
-        {
-            CurrentBlock.RotateCW();    
+    if not self:blockFits() then
+        self.currentBlock:rotateCW()
+    end
+end
 
-            if (!BlockFits())
-            {
-                CurrentBlock.RotateACW();
-            }
-        }
+function GameState:moveBlockLeft()
+    self.currentBlock:move(0, -1)
 
-        public void RotateBlockACW()
-        {
-            CurrentBlock.RotateACW();
+    if not self:blockFits() then
+        self.currentBlock:move(0, 1)
+    end
+end
 
-            if (!BlockFits())
-            {
-                CurrentBlock.RotateCW();
-            }
-        }
+function GameState:moveBlockRight()
+    self.currentBlock:move(0, 1)
 
-        public void MoveBlockLeft()
-        {
-            CurrentBlock.Move(0, -1);
+    if not self:blockFits() then
+        self.currentBlock:move(0, -1)
+    end
+end
 
-            if(!BlockFits())
-            {
-                CurrentBlock.Move(0, 1);
-            }    
-        }
+function GameState:moveBlockDown()
+    self.currentBlock:move(1, 0)
 
-        public void MoveBlockRight()
-        {
-            CurrentBlock.Move(0, 1);
+    if not self:blockFits() then
+        self.currentBlock:move(-1, 0)
+        self:placeBlock()
+    end
+end
 
-            if (!BlockFits())
-            {
-                CurrentBlock.Move(0, -1);
-            }
-        }
+function GameState:blockFits()
+    for _, p in ipairs(self.currentBlock:tilePositions()) do
+        if not self.playingField:isEmpty(p.row, p.column) then
+            return false
+        end
+    end
+    return true
+end
 
-        private bool IsGameOver()
-        {
-            return !(PlayingField.IsRowEmpty(0) && PlayingField.IsRowEmpty(1));
-        }
+function GameState:isGameOver()
+    return not (self.playingField:isRowEmpty(0) and self.playingField:isRowEmpty(1))
+end
 
-        private void PlaceBlock()
-        {
-            foreach (Position p in CurrentBlock.TilePositions())
-            {
-                PlayingField[p.Row, p.Column] = CurrentBlock.Id;
-            }
+function GameState:placeBlock()
+    for _, p in ipairs(self.currentBlock:tilePositions()) do
+        self.playingField[p.row][p.column] = self.currentBlock.id
+    end
 
-            Score += PlayingField.ClearFullRows();
+    self.score = self.score + self.playingField:clearFullRows()
 
-            if(IsGameOver())
-            {
-                GameOver = true;
-            }
-            else
-            {
-                CurrentBlock = BlockQueue.GetAndUpdate();
-                CanHold = true;
-            }
-        }
+    if self:isGameOver() then
+        self.gameOver = true
+    else
+        self.currentBlock = self.blockQueue:getAndUpdate()
+        self.canHold = true
+    end
+end
 
-        public void MoveBlockDown()
-        {
-            CurrentBlock.Move(1, 0);
+function GameState:blockDropDistance()
+    local drop = self.playingField.rows
 
-            if(!BlockFits())
-            {
-                CurrentBlock.Move(-1, 0);
-                PlaceBlock();
-            }    
-        }
+    for _, p in ipairs(self.currentBlock:tilePositions()) do
+        drop = math.min(drop, self:tileDropDistance(p))
+    end
 
-        private int TileDropDistance(Position p)
-        {
-            int drop = 0;
+    return drop
+end
 
-            while (PlayingField.IsEmpty(p.Row + drop + 1, p.Column))
-            {
-                drop++;
-            }
+function GameState:tileDropDistance(position)
+    local drop = 0
 
-            return drop;
-        }
+    while self.playingField:isEmpty(position.row + drop + 1, position.column) do
+        drop = drop + 1
+    end
 
-        public int BlockDropDistance()
-        {
-            int drop = PlayingField.Rows;
+    return drop
+end
 
-            foreach (Position p in CurrentBlock.TilePositions())
-            {
-                drop = System.Math.Min(drop, TileDropDistance(p));
-            }
+function GameState:dropBlock()
+    self.currentBlock:move(self:blockDropDistance(), 0)
+    self:placeBlock()
+end
 
-            return drop;
-        }
-
-        public void DropBlock()
-        {
-            CurrentBlock.Move(BlockDropDistance(), 0);
-            PlaceBlock();
-        }
-    }
-}
+return GameState
